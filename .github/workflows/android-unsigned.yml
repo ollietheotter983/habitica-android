@@ -1,0 +1,59 @@
+name: CI Build - unsigned release APK
+on:
+  push:
+    branches:
+      - build/ollie-instance
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare config files
+        run: |
+          set -e
+          # Copy example config files if real ones are missing so the build can proceed in CI
+          if [ -f habitica.properties.example ] && [ ! -f habitica.properties ]; then
+            cp habitica.properties.example habitica.properties
+          fi
+          if [ -f Habitica/google-services.json.example ] && [ ! -f Habitica/google-services.json ]; then
+            cp Habitica/google-services.json.example Habitica/google-services.json
+          fi
+          if [ -f Habitica/google-services.json.example ] && [ ! -f wearos/google-services.json ]; then
+            mkdir -p wearos
+            cp Habitica/google-services.json.example wearos/google-services.json
+          fi
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build release APKs (unsigned)
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: habitica-ollie-unsigned-apks
+          path: |
+            **/build/outputs/**/*.apk
+            app/build/outputs/**/*.apk
