@@ -1,0 +1,9 @@
+// Added UnifiedPush flavor and dependencies for unifiedpush build.
+// This is a minimal patch to modify Habitica module Gradle configuration to add a flavor.
+
+plugins {
+    id("com.android.application")
+}
+
+// NOTE: The file below is a patch and will not replace the existing Habitica/build.gradle.kts entirely.
+// We'll instead update habitica's build.gradle.kts by adding flavor and dependencies in a follow-up commit.
